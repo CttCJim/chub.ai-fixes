@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chub.ai improvements
 // @namespace    http://tampermonkey.net/
-// @version      2025-10-31
+// @version      2025-10-31-01
 // @description  Convert tags in text to html, other improvements as needed
 // @author       CttCJim
 // @match        https://chub.ai/*
@@ -31,6 +31,7 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
         var changed = false;
         var originalHTML = nodes[i].innerHTML;
         var divname;
+        var rstr;
         var imgTag;
         //----------------------------------------------------------------------------//
         {   //search the node for unparsed html and parse it
@@ -84,10 +85,13 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
                 }
                 var imgTagEncoded = originalHTML.substring(imgStart, imgEnd + 4); // +4 to include '&gt;'
                 var imgTagDecoded = imgTagEncoded.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-                divname = "imgdiv_" + randomString(12);
+                rstr = randomString(12);
+                divname = "imgdiv_" + rstr;
                 imgTag = `
-                    <button style="width:250px" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');if(x.style.display === 'none') {x.style.display = 'inline';} else {x.style.display = 'none';}">[Toggle Image]</button>
+                    <button id="btnOut_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Toggle Image]</button>
                     <div id="${divname}" style="display:none;">
+                        <button id="btnIn_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Toggle Image]</button>
+                        <br>
                         ${imgTagDecoded}
                     </div>
                 `;
@@ -114,10 +118,13 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
                 var content = originalHTML.substring(startIndex + closeAltstr.length, endIndex);
                 //replace the markdown image with an <img> tag
                 var altText = originalHTML.substring(originalHTML.indexOf('![')+2, originalHTML.indexOf(closeAltstr));
-                divname = "imgdiv_" + randomString(12);
+                rstr = randomString(12);
+                divname = "imgdiv_" + rstr;
                 imgTag = `
-                    <button style="width:250px" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');if(x.style.display ==='none') {x.style.display ='inline';} else {x.style.display ='none';}">[Toggle Image]</button>
+                    <button id="btnOut_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Toggle Image]</button>
                     <div id="${divname}" style="display:none;">
+                        <button id="btnIn_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Toggle Image]</button>
+                        <br>
                         <img src="${content}" alt="${altText}" style="max-width: 100%; height: auto;">
                     </div>
                 `;
