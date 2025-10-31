@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chub.ai improvements
 // @namespace    http://tampermonkey.net/
-// @version      2025-10-31-02
+// @version      2025-10-31-01
 // @description  Convert tags in text to html, other improvements as needed
 // @author       CttCJim
 // @match        https://chub.ai/*
@@ -26,8 +26,7 @@ function toggle(id) {
 }
 
 function showHTML() { //javascript code to search for unparsed HTML in elements with style "overflow-wrap: break-word;" and parse it
-    //var nodes = document.querySelectorAll('[style*="overflow-wrap: break-word;"]');
-    var nodes = document.querySelectorAll('.ant-collapse-content-box');
+    var nodes = document.querySelectorAll('[style*="overflow-wrap: break-word;"]');
     for(var i=0;i<nodes.length;i++) {   //for each text field found
         var changed = false;
         var originalHTML = nodes[i].innerHTML;
@@ -74,60 +73,6 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
             if(originalHTML.indexOf('&lt;a')>-1) {
                 originalHTML = originalHTML.replace(/&lt;a/g,'<a').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
                 changed=true;
-            }
-        }
-        //----------------------------------------------------------------------------//
-        {
-            //search the node for unparsed <video> tags and parse them
-            while (originalHTML.indexOf('&lt;video')>-1) {
-                var videoStart = originalHTML.indexOf('&lt;video');
-                var videoEnd = originalHTML.indexOf('&lt;/video', videoStart);
-                console.log("videoStart: " + videoStart + ", videoEnd: " + videoEnd);
-                if (videoEnd == -1) {
-                    break; // No closing tag found
-                }
-                var videoTagEncoded = originalHTML.substring(videoStart, videoEnd + 14); // +14 to include '&lt;/video&gt;'
-                //find all source tags within the video tag
-                var sourceTags = [];
-                var tempVideoTagEncoded = videoTagEncoded; //temporary variable to avoid infinite loop
-                while (tempVideoTagEncoded.indexOf('&lt;source')>-1) {
-                    var sourceStart = tempVideoTagEncoded.indexOf('&lt;source');
-                    var sourceEnd = tempVideoTagEncoded.indexOf('&gt;', sourceStart);
-                    if (sourceEnd == -1) {
-                        break; // No closing tag found
-                    }
-                    var sourceTagEncoded = tempVideoTagEncoded.substring(sourceStart, sourceEnd + 4); // +4 to include '&gt;'
-                    var sourceTagDecoded = sourceTagEncoded.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-                    sourceTags.push(sourceTagDecoded);
-                    //remove the source tag from the tempVideoTagEncoded to avoid infinite loop
-                    tempVideoTagEncoded = tempVideoTagEncoded.replace(sourceTagEncoded, '');
-                }
-
-                console.log("videoTagEncoded: " + videoTagEncoded);
-                var videoTagDecoded = videoTagEncoded.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-                //remove everything inside the <video> tag except the opening and closing tags
-                var videoTagOpenEnd = videoTagDecoded.indexOf('>') + 1;
-                var videoTagCloseStart = videoTagDecoded.lastIndexOf('</video>');
-                videoTagDecoded = videoTagDecoded.substring(0, videoTagOpenEnd) + videoTagDecoded.substring(videoTagCloseStart);
-                console.log("videoTagDecoded: " + videoTagDecoded);
-                //rebuild the video tag with the source tags included
-                var sourcesCombined = sourceTags.join('\n');
-                console.log("sourcesCombined: " + sourcesCombined);
-                videoTagDecoded = videoTagDecoded.replace('</video>', sourcesCombined + '\n</video>');
-                console.log("Final videoTagDecoded: " + videoTagDecoded);
-                //create the toggleable div
-                rstr = randomString(12);
-                divname = "videodiv_" + rstr;
-                var videoTag = `
-                    <button id="btnOut_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Toggle Video]</button>
-                    <div id="${divname}" style="display:none;">
-                        <button id="btnIn_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Toggle Video]</button>
-                        <br>
-                        ${videoTagDecoded}
-                    </div>
-                `;
-                originalHTML = originalHTML.replace(videoTagEncoded, videoTag);
-                changed = true;
             }
         }
         //----------------------------------------------------------------------------//
