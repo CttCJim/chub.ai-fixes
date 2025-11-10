@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chub.ai improvements
 // @namespace    http://tampermonkey.net/
-// @version      2025-11-10-00
+// @version      2025-11-10-01
 // @description  Convert tags in text to html, other improvements as needed
 // @author       CttCJim
 // @match        https://chub.ai/*
@@ -152,8 +152,22 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
 //----------------------------------------------------
 //Repeat once a second (1000ms). Adjust this if you prefer faster or slower. 100 should be fine but 1000 works well enough.
 //Anything too fast will cause performance issues.
-setInterval(showHTML,1000);
+//setInterval(showHTML,1000);
+//removing this - may be causing some looping issues and it's inefficient.
+//unfortunately the text isnt loaded until the user expands it, so we need another way to trigger the parsing.
+//Instead, we'll add a button to trigger the parsing when the user wants it.
+//----------------------------------------------------
+//Add a button to the page to toggle the HTML parsing
+var btn = document.createElement("button"); 
+btn.innerHTML = "Parse HTML";
+btn.className = "ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2";
+btn.onclick = showHTML;
+//add fixed btn to top right of page
+btn.style.position = "fixed";
+btn.style.top = "10px";
+btn.style.right = "50px";
+btn.style.zIndex = "9999";
+document.body.appendChild(btn);
 //----------------------------------------------------
 //future code here for other functions as needed.
-
 })();
