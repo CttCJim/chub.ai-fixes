@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chub.ai improvements
 // @namespace    http://tampermonkey.net/
-// @version      2025-10-31-01
+// @version      2025-11-10-00
 // @description  Convert tags in text to html, other improvements as needed
 // @author       CttCJim
 // @match        https://chub.ai/*
@@ -12,6 +12,7 @@
 (function() {
     'use strict';
 //----------------------------------------------------
+const verbose = false;
 function randomString(length=8) {
     var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     var result = '';
@@ -27,29 +28,30 @@ function toggle(id) {
 
 function showHTML() { //javascript code to search for unparsed HTML in elements with style "overflow-wrap: break-word;" and parse it
     var nodes = document.querySelectorAll('[style*="overflow-wrap: break-word;"]');
-    for(var i=0;i<nodes.length;i++) {   //for each text field found
+    for(var i=0;i<nodes.length;i++) {//for each text field found
         var changed = false;
         var originalHTML = nodes[i].innerHTML;
         var divname;
         var rstr;
         var imgTag;
         //----------------------------------------------------------------------------//
-        {   //search the node for unparsed html and parse it
-            //this would be much simpler of a solution! But not as good.
-            /*
+        //search the node for unparsed html and parse it
+        //this would be much simpler of a solution! But not as good.
+        /*
             //REMOVED: This could leave the user open to malicious code, although no more so than any other website.
             if(originalHTML.indexOf('&lt;')>-1) {
                 originalHTML = originalHTML.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
                 changed=true;
             }*/
-        }
-        {   //search the node for unparsed <br> tags and parse them
+        if(verbose) {console.log("Parsing node " + i + " for unparsed <br> tags.");}
+        {//search the node for unparsed <br> tags and parse them
             if(originalHTML.indexOf('&lt;br&gt;')>-1) {
                 originalHTML = originalHTML.replace(/&lt;br&gt;/g,'<br>');
                 changed=true;
             }
         }
-        {   //search the node for unparsed <p> tags and parse them
+        if (verbose) {console.log("Parsing node " + i + " for unparsed <p> tags.");}
+        {//search the node for unparsed <p> tags and parse them
             while(originalHTML.indexOf('&lt;p')>-1) {
                 var pStartPos = originalHTML.indexOf('&lt;p');
                 var pEndPos = originalHTML.indexOf('&lt;/p&gt;', pStartPos);
@@ -69,14 +71,16 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
             }
         }
         //----------------------------------------------------------------------------//
-        {   //search the node for unparsed <a> tags and parse them
+        {//search the node for unparsed <a> tags and parse them
+            if (verbose) {console.log("Parsing node " + i + " for unparsed <a> tags.");}
             if(originalHTML.indexOf('&lt;a')>-1) {
                 originalHTML = originalHTML.replace(/&lt;a/g,'<a').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
                 changed=true;
             }
         }
         //----------------------------------------------------------------------------//
-        {   //search the node for unparsed <img> tags and parse them into expandable images
+        {//search the node for unparsed <img> tags and parse them into expandable images
+            if (verbose) {console.log("Parsing node " + i + " for unparsed <img> tags.");}
             while (originalHTML.indexOf('&lt;img')>-1) {
                 var imgStart = originalHTML.indexOf('&lt;img');
                 var imgEnd = originalHTML.indexOf('&gt;', imgStart);
@@ -101,6 +105,7 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
         }
         //----------------------------------------------------------------------------//
         {   //search for the string "!["
+            if (verbose) {console.log("Parsing node " + i + " for unparsed markdown images.");}
             while(originalHTML.indexOf('![')>-1) {
                 //find the next () and get what's between the ()
                 var closeAltstr = '](';
@@ -137,7 +142,10 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
         }
         //if changes were made, update the node's innerHTML
         if(changed) {
+            if (verbose) {console.log("updating HTML for node " + i);}
             nodes[i].innerHTML = originalHTML;
+        } else {
+            if (verbose) {console.log("No changes made to node " + i);}
         }
     }
 }
