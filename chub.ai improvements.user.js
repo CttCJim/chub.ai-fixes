@@ -164,8 +164,8 @@ btn.className = "ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-bt
 btn.onclick = showHTML;
 //add fixed btn to top right of page
 btn.style.position = "fixed";
-btn.style.top = "10px";
-btn.style.right = "50px";
+btn.style.top = "50px";
+btn.style.right = "10px";
 btn.style.zIndex = "9999";
 document.body.appendChild(btn);
 //----------------------------------------------------
