@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         chub.ai improvements
 // @namespace    http://tampermonkey.net/
-// @version      2025-11-10-01
+// @version      2025-11-19-01
 // @description  Convert tags in text to html, other improvements as needed
 // @author       CttCJim
 // @match        https://chub.ai/*
@@ -92,9 +92,9 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
                 rstr = randomString(12);
                 divname = "imgdiv_" + rstr;
                 imgTag = `
-                    <button id="btnOut_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Toggle Image]</button>
+                    <button id="btnOut_${rstr}" class="CttCJim-img-button-show ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Show Image]</button>
                     <div id="${divname}" style="display:none;">
-                        <button id="btnIn_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Toggle Image]</button>
+                        <button id="btnIn_${rstr}" class="CttCJim-img-button-hide ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Hide Image]</button>
                         <br>
                         ${imgTagDecoded}
                     </div>
@@ -103,6 +103,7 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
                 changed = true;
             }
         }
+
         //----------------------------------------------------------------------------//
         {   //search for the string "!["
             if (verbose) {console.log("Parsing node " + i + " for unparsed markdown images.");}
@@ -126,9 +127,9 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
                 rstr = randomString(12);
                 divname = "imgdiv_" + rstr;
                 imgTag = `
-                    <button id="btnOut_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Toggle Image]</button>
+                    <button id="btnOut_${rstr}" class="CttCJim-img-button-show ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='inline';this.style.display ='none';">[Show Image]</button>
                     <div id="${divname}" style="display:none;">
-                        <button id="btnIn_${rstr}" class="ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Toggle Image]</button>
+                        <button id="btnIn_${rstr}" class="CttCJim-img-button-hide ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2" onclick="var x = document.getElementById('${divname}');x.style.display ='none';btnOut_${rstr}.style.display ='inline';">[Hide Image]</button>
                         <br>
                         <img src="${content}" alt="${altText}" style="max-width: 100%; height: auto;">
                     </div>
@@ -148,6 +149,24 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
             if (verbose) {console.log("No changes made to node " + i);}
         }
     }
+    //after processing all nodes, check if there are any images to show the "Show All Images" button
+    var imgButtons = document.querySelectorAll('button.CttCJim-img-button-show');
+    if(imgButtons.length>0) {
+        //check whether any of the buttons are still visible
+        var anyVisible = false;
+        imgButtons.forEach(function(button) {
+            if(button.style.display !== "none") {
+                anyVisible = true;
+            }
+        });
+        if(anyVisible) {
+            document.getElementById("CttCJim-showallbtn").style.display = "inline";
+        } else {
+            document.getElementById("CttCJim-showallbtn").style.display = "none";
+        }
+    } else {
+        document.getElementById("CttCJim-showallbtn").style.display = "none";
+    }
 }
 //----------------------------------------------------
 //Repeat once a second (1000ms). Adjust this if you prefer faster or slower. 100 should be fine but 1000 works well enough.
@@ -158,16 +177,66 @@ function showHTML() { //javascript code to search for unparsed HTML in elements 
 //Instead, we'll add a button to trigger the parsing when the user wants it.
 //----------------------------------------------------
 //Add a button to the page to toggle the HTML parsing
-var btn = document.createElement("button"); 
+
+var topdiv = document.createElement("div");
+topdiv.style.position = "fixed";
+topdiv.style.top = "50px";
+topdiv.style.right = "10px";
+topdiv.style.zIndex = "9999";
+//topdiv.style.backgroundColor = "white";
+//topdiv.style.padding = "5px";
+//topdiv.style.border = "1px solid black";
+//topdiv.style.borderRadius = "5px";
+topdiv.innerHTML = ``;
+
+var btn = document.createElement("button");
 btn.innerHTML = "Parse HTML";
 btn.className = "ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2";
 btn.onclick = showHTML;
 //add fixed btn to top right of page
-btn.style.position = "fixed";
+/*btn.style.position = "fixed";
 btn.style.top = "50px";
 btn.style.right = "10px";
-btn.style.zIndex = "9999";
-document.body.appendChild(btn);
+btn.style.zIndex = "9999";*/
+topdiv.appendChild(btn);
+
+var showallbtn = document.createElement("button");
+//this button should click all "[Show Image]" buttons on the page to expand all images
+showallbtn.innerHTML = "Show All Images";
+showallbtn.className = "ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2";
+showallbtn.id = "CttCJim-showallbtn";
+showallbtn.style.marginLeft = "5px";
+//should be hidden by default, only shown when there are images to show
+showallbtn.style.display = "none";
+showallbtn.onclick = function() {
+    var buttons = document.querySelectorAll('button.CttCJim-img-button-show');
+    buttons.forEach(function(button) {
+        button.click();
+    });
+    this.style.display = "none";
+    document.getElementById("CttCJim-hideallbtn").style.display = "inline";
+};
+topdiv.appendChild(showallbtn);
+
+//create a "hide all" button the same way
+var hideallbtn = document.createElement("button");
+hideallbtn.innerHTML = "Hide All Images";
+hideallbtn.className = "ant-btn css-f6nzt4 ant-btn-default ant-btn-color-default ant-btn-variant-outlined mt-2";
+hideallbtn.id = "CttCJim-hideallbtn";
+hideallbtn.style.marginLeft = "5px";
+hideallbtn.style.display = "none";
+hideallbtn.onclick = function() {
+    var buttons = document.querySelectorAll('button.CttCJim-img-button-hide');
+    buttons.forEach(function(button) {
+        button.click();
+    });
+    this.style.display = "none";
+    document.getElementById("CttCJim-showallbtn").style.display = "inline";
+};
+topdiv.appendChild(hideallbtn);
+
+
+document.body.appendChild(topdiv);
 //----------------------------------------------------
 //future code here for other functions as needed.
 })();
